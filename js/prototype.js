@@ -1,15 +1,27 @@
 (function ($) {
     $(document).ready( function () {
-        var arrObjects = [];
+        var arrObjects = [],
+            mainFooter = $('#main, footer'),
+            clearCompleted = $('footer').find('#clear-completed'),
+            toggleAll = $('#main').find('#toggle-all');
 
-
+        /**
+         * Creates an instance of Todo.
+         *
+         * @constructor
+         * @this {Todo}
+         */
         function Todo () {
             this.id = -1;
             this.checked = false;
         }
 
-        //===============================Отправляем сообщение=============================//
-
+        /**
+         * Send message
+         *
+         * @this {Todo}
+         * @param {string} text This is text each message(object)
+         */
         Todo.prototype.sendMessage = function (text) {
             this.text = text;
             this.id += 1;
@@ -25,66 +37,88 @@
                         '</li>'),
             ul = $('#todo-list');
             ul.append(li);
-            $('#main, footer').show();
+            mainFooter.show();
             todo.countItems();
             todo.checkDoneItem();
         };
 
-        //===============================Редактирование сообщения=============================//
-
+        /**
+         * Edit message
+         *
+         * @this {li}
+         */
         Todo.prototype.editMessage = function () {
-            $(this).find('.edit').show();
-            $(this).find('.view').hide();
-            $(this).find('.destroy').hide();
-            $(this).addClass('editing');
+            var that = $(this);
+            that.find('.edit').show();
+            that.find('.view').hide();
+            that.find('.destroy').hide();
+            that.addClass('editing');
             todo.clearSelection();
         };
 
-        //===============================Окончание редактирвоания сообщения=============================//
-
+        /**
+         * Finish edit message
+         *
+         * @this {li}
+         * @param {event, edited value input, li element}
+         */
         Todo.prototype.finishEditMessage = function (e, value, li) {
             var view = $(e.currentTarget).closest('li').find('.view'),
-                edit = $(e.currentTarget).closest('.edit');
+                edit = $(e.currentTarget).closest('.edit'),
+                destroy = $(this).closest('li').find('.destroy');
 
                 edit.hide();
                 view.show();
-                $(this).closest('li').find('.destroy').css('display', '');
+                destroy.css('display', '');
                 view.find('label').html(value);
                 edit.attr('value', value);
                 li.removeClass('editing');
         };
 
-        //===============================Удаление сообщения=============================//
 
+        /**
+         * Remove message
+         *
+         * @this {icon's remove}
+         * @param {event}
+         */
         Todo.prototype.destroyMessage = function (e) {
+            var dataId = $(e.currentTarget).closest('li').data('id');
             for(var i = 0; i < arrObjects.length; i++) {
-                if(arrObjects[i].id == $(e.currentTarget).closest('li').data('id') )
+                if(arrObjects[i].id == dataId )
                     arrObjects.splice(i, 1);
             }
             $(this).closest('li').remove();
             todo.countItems();
             todo.checkDoneItem();
+            todo.ifHaveDoneItem();
         };
 
-        //===============================Считаем кол-во существующих сообщений=============================//
-
+        /**
+         * Count number exist message
+         *
+         */
         Todo.prototype.countItems = function () {
             var count = arrObjects.length,
                 counter = $('.todo-count').find('b');
                 counter.html(count);
 
                 if(count == 0) {
-                    $('#main, footer').hide();
-                    $('#main').find('#toggle-all').prop('checked', false);
+                    mainFooter.hide();
+                    toggleAll.prop('checked', false);
                 }
         };
 
-        //===============================Проверка на наличие чека у чекбокса=============================//
-
+        /**
+         * Check availability pin checkbox
+         *
+         * @param {event, li element}
+         */
         Todo.prototype.checkForCheckBox = function (e, li) {
+            var checked = $(e.currentTarget).is(':checked');
             for(var i = 0; i < arrObjects.length; i++){
                 if(arrObjects[i].id == li.data('id')) {
-                    arrObjects[i].checked = $(e.currentTarget).is(':checked');
+                    arrObjects[i].checked = checked;
                 }
             }
             $(e.currentTarget).closest('li').toggleClass('done');
@@ -92,26 +126,27 @@
             todo.ifHaveDoneItem();
         };
 
-        //===============================Проверка для общего чекбокса=============================//
-
+        /**
+         * Check for general checkbox
+         *
+         * @param {event}
+         */
         Todo.prototype.checkForAllCheckBox = function (e) {
-            if($(e.currentTarget).is(':checked')) {
+            var checked = $(e.currentTarget).is(':checked');
+            if(checked) {
                 for(var i = 0; i < arrObjects.length; i++){
-                    arrObjects[i].checked = true;
+                    arrObjects[i].checked = checked;
                 };
-                $('#todo-list').find('li').addClass('done').find('.toggle').prop("checked", true);
-            } else {
-                for(var i = 0; i < arrObjects.length; i++){
-                    arrObjects[i].checked = false;
-                };
-                $('#todo-list').find('li').removeClass('done').find('.toggle').prop("checked", false);
+                $('#todo-list').find('li').toggleClass('done').find('.toggle').prop("checked", checked);
             }
             todo.checkDoneItem();
             todo.ifHaveDoneItem();
         };
 
-        //===============================Не позволяет выделять элемент=============================//
-
+        /**
+         * Don't resolution selection element
+         *
+         */
         Todo.prototype.clearSelection = function () {
             try {
                 window.getSelection().removeAllRanges();
@@ -120,8 +155,10 @@
             }
         };
 
-        //===============================Сколько задач выполненно=============================//
-
+        /**
+         * How task achieved
+         *
+         */
         Todo.prototype.checkDoneItem = function () {
             var trueCheck = 0,
                 result,
@@ -140,59 +177,74 @@
             counter.html(result);
         };
 
-        //===============================Если хоть один чек не чекнут, вырубает общий или наоборот=============================//
-
+        /**
+         * if one checkbox don't pin, turn off general checkbox or turn on
+         *
+         */
         Todo.prototype.ifOneCheckBoxNotChecked = function () {
             for( var i = 0; i < arrObjects.length; i++ ) {
-                if( arrObjects[i].checked == false ) {
-                    $('#main').find('#toggle-all').prop('checked', false);
+                if( !arrObjects[i].checked ) {
+                    toggleAll.prop('checked', false);
                     return;
-                } else if (arrObjects[i].checked == true){
-                    $('#main').find('#toggle-all').prop('checked', true);
+                } else if (arrObjects[i].checked){
+                    toggleAll.prop('checked', true);
                 }
             }
         };
 
-        //===============================Удаляем отмеченные пункты=============================//
-
+        /**
+         * Remove marked items
+         *
+         */
         Todo.prototype.ifHaveDoneItem = function () {
             for(var i = 0; i < arrObjects.length; i++) {
-                if(arrObjects[i].checked == true) {
-                    $('footer').find('#clear-completed').show();
+                if( arrObjects[i].checked ) {
+                    clearCompleted.show();
                     return;
                 } else {
-                    $('footer').find('#clear-completed').hide();
+                    clearCompleted.hide();
                 }
             }
         };
 
-        //===============================Отрисовываем кол-во отмеченных пункотв для кнопки удаления отмеченных=============================//
-
+        /**
+         * Render number marked items for button's delete  marked
+         *
+         * @this {number} resultForClearBtn number marked checkbox
+         */
         Todo.prototype.countDoneItem = function (resultForClearBtn) {
-            $('footer').find('#clear-completed').html('Clear ' + resultForClearBtn + ' completed item');
+            clearCompleted.html('Clear ' + resultForClearBtn + ' completed item');
         };
 
+        /**
+         * Remove done message
+         *
+         *
+         */
         Todo.prototype.removeDoneMessage = function () {
             for(var i = 0; i < arrObjects.length; i++) {
                 if(arrObjects[i].checked) {
                     arrObjects.splice(i, 1);
                     i--;
                 } else {
-                    $('footer').find('#clear-completed').hide();
+                    clearCompleted.hide();
                 }
             }
             $('#todo-list').find('li.done').remove();
             if (!arrObjects.length) {
-                $('#main, footer').hide();
-                $('footer').find('#clear-completed').hide();
-                $('#main').find('#toggle-all').prop('checked', false);
+                mainFooter.hide();
+                clearCompleted.hide();
+                toggleAll.prop('checked', false);
             }
         };
 
         var todo = new Todo();
 
-        //===============================Здесь вызывются события=============================//
-
+        /**
+         * Here declared events
+         *
+         *
+         */
         $('header').on('keydown', 'input', function (e) {
             if(e.keyCode == 13) {
                 var inputTexts = $('header').find('input').val();
