@@ -2,8 +2,13 @@
     $(document).ready( function () {
         var arrObjects = [],
             mainFooter = $('#main, footer'),
-            clearCompleted = $('footer').find('#clear-completed'),
-            toggleAll = $('#main').find('#toggle-all');
+            mainBlock = $('#main'),
+            footer = $('footer'),
+            clearCompleted = footer.find('#clear-completed'),
+            toggleAll = mainBlock.find('#toggle-all'),
+            header = $('header'),
+            list = $('#todo-list');
+
 
         /**
          * Creates an instance of Todo.
@@ -25,18 +30,15 @@
         Todo.prototype.sendMessage = function (text) {
             this.text = text;
             this.id += 1;
-            var objectTodo = $.extend({}, todo);
-            arrObjects.push(objectTodo);
-            var li = $('<li data-id= ' + this.id + '> ' +
-                            '<div class="view"> ' +
-                                '<input class="toggle" type="checkbox"> ' +
-                                '<label>' + this.text + '</label> ' +
-                            '</div> ' +
-                            '<input class="edit" type="text" value=' + this.text + '> ' +
-                            '<a class="destroy" href="#"></a> ' +
-                        '</li>'),
-            ul = $('#todo-list');
-            ul.append(li);
+            var objectTodo = $.extend({}, todo),
+                source = $("#entry-template").html(),
+                template = Handlebars.compile(source),
+                context = {id: this.id, text: this.text },
+                html = template(context),
+                ul = $('#todo-list');
+                arrObjects.push(objectTodo);
+
+            ul.append(html);
             mainFooter.show();
             todo.countItems();
             todo.checkDoneItem();
@@ -48,11 +50,11 @@
          * @this {li}
          */
         Todo.prototype.editMessage = function () {
-            var that = $(this);
-            that.find('.edit').show();
-            that.find('.view').hide();
-            that.find('.destroy').hide();
-            that.addClass('editing');
+            var $this = $(this);
+            $this.find('.edit').show();
+            $this.find('.view').hide();
+            $this.find('.destroy').hide();
+            $this.addClass('editing');
             todo.clearSelection();
         };
 
@@ -135,12 +137,17 @@
             var checked = $(e.currentTarget).is(':checked');
             if(checked) {
                 for(var i = 0; i < arrObjects.length; i++){
-                    arrObjects[i].checked = checked;
+                    arrObjects[i].checked = true;
                 };
-                $('#todo-list').find('li').toggleClass('done').find('.toggle').prop("checked", checked);
+                $('#todo-list').find('li').addClass('done').find('.toggle').prop("checked", true);
+            } else {
+                for(var i = 0; i < arrObjects.length; i++){
+                    arrObjects[i].checked = false;
+                };
+                $('#todo-list').find('li').removeClass('done').find('.toggle').prop("checked", false);
             }
-            todo.checkDoneItem();
             todo.ifHaveDoneItem();
+            todo.checkDoneItem();
         };
 
         /**
@@ -238,6 +245,7 @@
             }
         };
 
+
         var todo = new Todo();
 
         /**
@@ -245,7 +253,14 @@
          *
          *
          */
-        $('header').on('keydown', 'input', function (e) {
+        function ObjEvents() {};
+        var objEvents = new ObjEvents();
+
+        objEvents.listEvents = function (parentSelector, type, selector, callback) {
+            parentSelector.on(type, selector, callback);
+        };
+
+        objEvents.eventKeyEnter = function (e) {
             if(e.keyCode == 13) {
                 var inputTexts = $('header').find('input').val();
                 if (!inputTexts) {
@@ -254,29 +269,80 @@
                 $(this).val('');
                 todo.sendMessage(inputTexts);
             }
-        });
-        $('#todo-list').on('keydown', 'input', function (e) {
-            if( e.keyCode == 13 || e.keyCode == 27 ){
+        };
+
+        objEvents.eventKeyEnterAndEsc = function (e) {
+            if( e.keyCode == 13 ){
                 var value = $(e.currentTarget).val(),
                     li = $(e.currentTarget).closest('li');
-                for(var i = 0; i < arrObjects.length; i++){
+                for(var i = 0, max = arrObjects.length; i < max; i++){
                     if(arrObjects[i].id == li.data('id')) {
                         arrObjects[i].text = value;
                     }
                 };
                 todo.finishEditMessage(e, value, li);
+            } else if (e.keyCode == 27) {
+                var value,
+                    li = $(e.currentTarget).closest('li');
+                for(var i = 0, max = arrObjects.length; i < max; i++){
+                    if(arrObjects[i].id == li.data('id')) {
+                        value = arrObjects[i].text;
+                    }
+                };
+                todo.finishEditMessage(e, value, li);
             }
-        });
-        $('#todo-list').on('dblclick', 'li', todo.editMessage);
-        $('#todo-list').on('dblclick', '.toggle', function () {return false;});
-        $('#todo-list').on('click', '.destroy', todo.destroyMessage);
-        $('#todo-list').on('click', '.toggle', function (e) {
+        };
+
+        objEvents.eventCheckBox = function (e) {
             var li = $(this).closest('li');
             todo.checkForCheckBox(e, li);
             todo.checkDoneItem();
-        });
-        $('#main').on('click', '#toggle-all', todo.checkForAllCheckBox);
-        $('footer').on('click', '#clear-completed', todo.removeDoneMessage);
+        };
+
+        objEvents.listEvents(header, 'keydown', 'input', objEvents.eventKeyEnter);
+        objEvents.listEvents(list, 'keydown', 'input', objEvents.eventKeyEnterAndEsc);
+        objEvents.listEvents(list, 'dblclick', 'li', todo.editMessage);
+        objEvents.listEvents(list, 'dblclick', '.toggle', function () {return false;});
+        objEvents.listEvents(list, 'click', '.destroy', todo.destroyMessage);
+        objEvents.listEvents(list, 'click', '.toggle', objEvents.eventCheckBox);
+        objEvents.listEvents(mainBlock, 'click', '#toggle-all', todo.checkForAllCheckBox);
+        objEvents.listEvents(footer, 'click', '#clear-completed', todo.removeDoneMessage);
+
+
+        //header.on('keydown', 'input', function (e) {
+        //    if(e.keyCode == 13) {
+        //        var inputTexts = $('header').find('input').val();
+        //        if (!inputTexts) {
+        //            return;
+        //        }
+        //        $(this).val('');
+        //        todo.sendMessage(inputTexts);
+        //    }
+        //});
+        //list.on('keydown', 'input', function (e) {
+            //if( e.keyCode == 13 || e.keyCode == 27 ){
+            //    var value = $(e.currentTarget).val(),
+            //        li = $(e.currentTarget).closest('li');
+            //    for(var i = 0, max = arrObjects.length; i < max; i++){
+            //        if(arrObjects[i].id == li.data('id')) {
+            //            arrObjects[i].text = value;
+            //        }
+            //    };
+            //    todo.finishEditMessage(e, value, li);
+            //}
+        //});
+        //list.on('dblclick', 'li', todo.editMessage);
+        //list.on('dblclick', '.toggle', function () {return false;});
+        //list.on('click', '.destroy', todo.destroyMessage);
+        //list.on('click', '.toggle', function (e) {
+        //    var li = $(this).closest('li');
+        //    todo.checkForCheckBox(e, li);
+        //    todo.checkDoneItem();
+        //});
+        //mainBlock.on('click', '#toggle-all', todo.checkForAllCheckBox);
+        //footer.on('click', '#clear-completed', todo.removeDoneMessage);
+
+
 
 
 

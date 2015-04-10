@@ -26,8 +26,18 @@
         </div>
     </footer>
 </div>
+<script id="entry-template" type="text/x-handlebars-template">
+    <li data-id='{{this.id}}'>
+        <div class="view">
+            <input class="toggle" type="checkbox">
+            <label>{{this.text}}</label>
+        </div>
+        <input class="edit" type="text" value='{{this.text}}'>
+        <a class="destroy" href="#"></a>
+    </li>
+</script>
 <script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
-<script src="http://underscorejs.org/underscore.js"></script>
+<script src="js/handlebars-v3.0.0.js"></script>
 <script src="js/prototype.js"></script>
 </body>
 </html>
