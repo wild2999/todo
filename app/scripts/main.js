@@ -7,7 +7,9 @@
     toggleAll = mainBlock.find('#toggle-all'),
     header = $('header'),
     list = $('.todo-list'),
-    id = 0;
+    todo,
+    id = 0,
+    $inputTexts;
 
 
   /**
@@ -16,10 +18,11 @@
    * @constructor
    * @this {Todo}
    */
-  function Todo (id, checked) {
+  function Todo (id, checked, text) {
     this._id = id;
     this._checked = checked;
-    TodoListItem.call(this, arguments);
+    this._text = text;
+    TodoListItem.apply(this, arguments);
 
     /**
      * Send message
@@ -27,8 +30,7 @@
      * @this {Todo}
      * @param {string} text This is text each message(object)
      */
-    this.sendMessage = function (text) {
-      this._text = text;
+    this.sendMessage = function () {
       var objectTodo = $.extend({}, todo),
         $source = $("#entry-template").html(),
         template = Handlebars.compile($source),
@@ -119,43 +121,6 @@
       clearCompleted.html('Clear ' + resultForClearBtn + ' completed item');
     };
 
-    function eventKeyEnter(e) {
-      if(e.keyCode == 13) {
-        var $inputTexts = header.find('input').val();
-        if (!$inputTexts) {
-          return;
-        }
-        $(this).val('');
-        todo.sendMessage($inputTexts);
-        footer.on('click', '.clear-completed', todo.removeDoneMessage);
-      }
-    };
-
-    function eventKeyEnterAndEsc(e) {
-      if( e.keyCode == 13 ){
-        var value = $(e.currentTarget).val(),
-          li = $(e.currentTarget).closest('li');
-        for(var i = 0, max = arrObjects.length; i < max; i++){
-          if(arrObjects[i]._id == li.data('id')) {
-            arrObjects[i]._text = value;
-          }
-        };
-        todoListItem.finishEditMessage(e, value, li);
-      } else if (e.keyCode == 27) {
-        var value,
-          li = $(e.currentTarget).closest('li');
-        for(var i = 0, max = arrObjects.length; i < max; i++){
-          if(arrObjects[i]._id == li.data('id')) {
-            value = arrObjects[i]._text;
-          }
-        };
-        todoListItem.finishEditMessage(e, value, li);
-      }
-    };
-
-    header.on('keydown', 'input', eventKeyEnter);
-    list.on('keydown', 'input', eventKeyEnterAndEsc);
-
   }
 
   /**
@@ -178,6 +143,7 @@
       $this.find('.destroy').hide();
       $this.addClass('editing');
       todoListItem.clearSelection();
+      console.log(todo);
     };
 
 
@@ -304,31 +270,62 @@
         }
       }
     };
-
-    var eventCheckBox = function (e) {
-      var li = $(this).closest('li');
-      todoListItem.checkForCheckBox(e, li);
-      todo.checkDoneItem();
-    };
-
-    list.on('click', '.toggle', eventCheckBox);
   }
-
-  /**
-   * Declared instance class
-   *
-   */
   var todoListItem = new TodoListItem();
-  var todo = new Todo(id++, false);
-
 
   /**
-   * Declared events
+   * Here declared events
+   *
    *
    */
+  var eventKeyEnter = function (e) {
+    if(e.keyCode == 13) {
+      $inputTexts = header.find('input').val();
+      if (!$inputTexts) {
+        return;
+      }
+      $(this).val('');
+      todo = new Todo(id++, false, $inputTexts);
+      todo.sendMessage($inputTexts);
+      footer.on('click', '.clear-completed', todo.removeDoneMessage);
+    }
+  };
+
+  var eventKeyEnterAndEsc = function (e) {
+    if( e.keyCode == 13 ){
+      var value = $(e.currentTarget).val(),
+          li = $(e.currentTarget).closest('li');
+      for(var i = 0, max = arrObjects.length; i < max; i++){
+        if(arrObjects[i]._id == li.data('id')) {
+          arrObjects[i]._text = value;
+        }
+      };
+      todoListItem.finishEditMessage(e, value, li);
+    } else if (e.keyCode == 27) {
+      var value,
+          li = $(e.currentTarget).closest('li');
+      for(var i = 0, max = arrObjects.length; i < max; i++){
+        if(arrObjects[i]._id == li.data('id')) {
+          value = arrObjects[i]._text;
+        }
+      };
+      todoListItem.finishEditMessage(e, value, li);
+    }
+  };
+
+  var eventCheckBox = function (e) {
+    var li = $(this).closest('li');
+    todoListItem.checkForCheckBox(e, li);
+    todo.checkDoneItem();
+  };
+
+  header.on('keydown', 'input', eventKeyEnter);
+  list.on('keydown', 'input', eventKeyEnterAndEsc);
   list.on('dblclick', 'li', todoListItem.editMessage);
   list.on('dblclick', '.toggle', function () {return false;});
   list.on('click', '.destroy', todoListItem.destroyMessage);
+  list.on('click', '.toggle', eventCheckBox);
   mainBlock.on('click', '#toggle-all', todoListItem.checkForAllCheckBox);
+
 
 }(jQuery));
