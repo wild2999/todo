@@ -16,7 +16,7 @@
    * @constructor
    * @this {Todo}
    */
-  function Todo (id, checked, text) {
+  function Todo (id, checked) {
     this._id = id;
     this._checked = checked;
     TodoListItem.call(this, arguments);
