@@ -22,7 +22,6 @@
     this._id = id;
     this._checked = checked;
     this._text = text;
-    TodoListItem.apply(this, arguments);
 
     /**
      * Send message
@@ -130,6 +129,7 @@
    * @this {TodoListItem}
    */
   function TodoListItem () {
+    Todo.apply(this, arguments);
 
     /**
      * Edit message
