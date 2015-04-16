@@ -1,0 +1,14 @@
+(function ($) {
+
+  /**
+   * Here declared events
+   *
+   *
+   */
+
+
+
+
+
+
+});

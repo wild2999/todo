@@ -1,0 +1,111 @@
+body
+  font: $base-font
+  line-height: $standart-line
+  background: $gray-lighter
+  color: $dark
+  width: 520px
+  margin: 0 auto
+  -webkit-font-smoothing: antialiased
+
+.todoapp
+  background: $base-bg
+  padding: 20px
+  margin-bottom: 40px
+  +vendor(box-shadow, rgba(0, 0, 0, 0.2) 0 2px 6px 0)
+  +vendor(border-radius, 0 0 5px 5px)
+
+  h1
+    font-size: $font-upper
+    font-weight: bold
+    text-align: center
+    padding: 0 0 10px 0
+
+  input[type="text"]
+    width: 466px
+    font-size: $font-middle
+    font-family: inherit
+    line-height: $standart-line
+    border: 0
+    outline: none
+    padding: 6px
+    border: 1px solid $gray-light
+    +vendor(box-shadow, rgba(0, 0, 0, 0.2) 0 1px 2px 0 inset)
+
+  & footer
+    display: none
+    margin: 0 -20px -20px -20px
+    overflow: hidden
+    color: $gray-dark
+    background: #f4fce8
+    border-top: 1px solid #ededed
+    padding: 0 20px
+    line-height: 37px
+    +vendor(border-radius, 0 0 5px 5px)
+
+.main
+  display: none
+
+.todo-list
+  margin: 10px 0
+  padding: 0
+  list-style: none
+
+  li
+    padding: 18px 20px 18px 0
+    position: relative
+    font-size: $font-middle
+    border-bottom: 1px solid #cccccc
+
+    &:last-child
+      border-bottom: none
+
+    &:hover .destroy
+      display: block
+
+    &.editing
+      padding: 0
+      margin-top: -1px
+      border-bottom: none
+
+    & .edit
+      display: none
+
+    &.done label
+      color: $gray
+      text-decoration: line-through
+
+    & .view label
+      word-break: break-word
+
+    & .view input:hover
+      transform-style: preserve-3d
+      transform: perspective(900px)
+
+  & .destroy
+    position: absolute
+    right: 5px
+    top: 23px
+    display: none
+    cursor: pointer
+    width: 20px
+    height: 20px
+    background: url(../img/destroy.png) no-repeat
+
+  & .destroy:hover
+    background-position: 0 -20px
+
+.clear-completed
+  float: right
+  line-height: 20px
+  text-decoration: none
+  background: rgba(0, 0, 0, 0.1)
+  color: $gray-dark
+  font-size: 11px
+  margin: 8px 0
+  padding: 0 10px 1px
+  cursor: pointer
+  +vendor(border-radius, 12px)
+  +vendor(box-shadow, rgba(0, 0, 0, 0.2) 0 -1px 0 0)
+  display: none
+
+
